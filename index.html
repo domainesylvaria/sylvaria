@@ -8209,7 +8209,7 @@ var DomaineAppBundle = (() => {
   }
 
   // src/core/access/links.ts
-  var ONLINE_APP_URL = "https://elloodiielp.github.io/sylvaria/";
+  var ONLINE_APP_URL = "https://domainesylvaria.github.io/sylvaria/";
   function deploymentIdOf(url) {
     const m = String(url || "").match(/\/macros\/s\/([A-Za-z0-9_-]+)\/(exec|dev)/);
     return m ? m[1] : null;
@@ -9595,7 +9595,7 @@ var DomaineAppBundle = (() => {
   }
   function getAppsScriptCode() {
     return `// =========================================================================
-// CONNECTEUR UNIVERSEL GOOGLE SHEETS & PLANNING - DOMAINE SYLVARIA (V18)
+// CONNECTEUR UNIVERSEL GOOGLE SHEETS & PLANNING - DOMAINE SYLVARIA (V19)
 // =========================================================================
 // Instructions d'installation (1 minute) :
 // 1. Dans votre Google Sheet, allez dans : Extensions > Apps Script
@@ -9668,6 +9668,7 @@ var DomaineAppBundle = (() => {
 // Drive priv\xE9 \xAB Domaine Sylvaria - Documents administratifs \xBB ; rappels d'\xE9ch\xE9ance par e-mail (m\xEAme d\xE9clencheur
 // horaire, un e-mail regroup\xE9, jamais deux fois le m\xEAme palier) ; les personnes autoris\xE9es au module voient, avec leur
 // lien d'acc\xE8s, seulement les documents que vous avez marqu\xE9s \xAB partag\xE9s \xBB (ni notes, ni historique).
+// V19 : adresse en ligne de l'application chang\xE9e (compte GitHub domainesylvaria) ; aucune nouvelle autorisation.
 // Mise \xE0 jour depuis la V10 \xE0 V16 : collez TOUT ce code (jusqu'\xE0 la derni\xE8re ligne), puis
 // D\xE9ployer > G\xE9rer les d\xE9ploiements > crayon > Nouvelle version > D\xE9ployer (aucune nouvelle autorisation).
 // =========================================================================
@@ -10359,7 +10360,7 @@ function doPost(e) {
 // V10 : ACC\xC8S D\xC9DI\xC9 DES PERSONNES, PHOTOS (GOOGLE DRIVE), RAPPELS PAR E-MAIL, CL\xC9
 // =========================================================================
 
-var CONNECTOR_VERSION = 18;
+var CONNECTOR_VERSION = 19;
 var ADMIN_KEY_PROP = "CLE_ADMIN";
 var PHOTO_FOLDER_PROP = "DOSSIER_PHOTOS_MENAGE";
 var PHOTO_FOLDER_NAME = "Domaine Sylvaria - Photos m\xE9nage";
@@ -11867,7 +11868,7 @@ function sendStayLink_(data) {
 // V16 : DEMANDES D'AVIS AUTOMATIQUES APR\xC8S LE S\xC9JOUR (FACULTATIF) + NOTES PLAUSIBLES
 // =========================================================================
 
-var ONLINE_APP_URL_ = "https://elloodiielp.github.io/sylvaria/";
+var ONLINE_APP_URL_ = "https://domainesylvaria.github.io/sylvaria/";
 var REVIEW_REQUEST_MAX_PER_RUN = 15;
 
 // Note du client : 1 \xE0 5, sinon rien (un montant n'est jamais une note)
@@ -12548,7 +12549,7 @@ function staffSiteStatus_(ctx, id, status, note) {
   return out;
 }
 
-// ===== FIN DU CONNECTEUR (V18) : si cette ligne n'est pas tout en bas dans Apps Script, le code coll\xE9 est incomplet. =====
+// ===== FIN DU CONNECTEUR (V19) : si cette ligne n'est pas tout en bas dans Apps Script, le code coll\xE9 est incomplet. =====
 `;
   }
 
