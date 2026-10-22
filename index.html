@@ -361,9 +361,9 @@ var DomaineAppBundle = (() => {
       return { date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`, time: `${pad(now.getHours())}:${pad(now.getMinutes())}` };
     }
   }
-  function shiftDate(iso, days) {
+  function shiftDate(iso, days2) {
     const [y, m, d] = iso.split("-").map(Number);
-    const dt = new Date(Date.UTC(y, m - 1, d + days));
+    const dt = new Date(Date.UTC(y, m - 1, d + days2));
     return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
   }
   var weekDayOf = (iso) => {
@@ -700,8 +700,8 @@ var DomaineAppBundle = (() => {
   }
   function normalizeOrdering(raw) {
     const r = raw && typeof raw === "object" ? raw : {};
-    const days = typeof r.daysAhead === "number" && isFinite(r.daysAhead) ? Math.round(r.daysAhead) : 14;
-    return { enabled: r.enabled !== false, audience: r.audience === "public" ? "public" : "guests", daysAhead: Math.max(1, Math.min(60, days)) };
+    const days2 = typeof r.daysAhead === "number" && isFinite(r.daysAhead) ? Math.round(r.daysAhead) : 14;
+    return { enabled: r.enabled !== false, audience: r.audience === "public" ? "public" : "guests", daysAhead: Math.max(1, Math.min(60, days2)) };
   }
   function readMeals(settings) {
     return normalizeMeals(settings.modules.meals?.settings);
@@ -1179,9 +1179,9 @@ var DomaineAppBundle = (() => {
     const d = /* @__PURE__ */ new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
-  function isoShift(iso, days) {
+  function isoShift(iso, days2) {
     const [y, m, d] = iso.split("-").map(Number);
-    return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+    return new Date(Date.UTC(y, m - 1, d + days2)).toISOString().slice(0, 10);
   }
   function requestCandidates(reservations, metas2, rv, today4) {
     const list3 = [];
@@ -1249,8 +1249,8 @@ var DomaineAppBundle = (() => {
       savedAt: ""
     };
   }
-  function cleanReminderDays(days) {
-    const list3 = (Array.isArray(days) ? days : []).map(Number).filter((n) => isFinite(n) && n >= 1 && n <= 730).map(Math.round);
+  function cleanReminderDays(days2) {
+    const list3 = (Array.isArray(days2) ? days2 : []).map(Number).filter((n) => isFinite(n) && n >= 1 && n <= 730).map(Math.round);
     return Array.from(new Set(list3)).sort((a, b) => b - a);
   }
   function readAdmin(settings) {
@@ -1260,7 +1260,7 @@ var DomaineAppBundle = (() => {
     defaults.categories.forEach((d) => {
       if (!categories.some((c) => c.id === d.id)) categories = [...categories, d];
     });
-    const days = cleanReminderDays(raw.reminderDays);
+    const days2 = cleanReminderDays(raw.reminderDays);
     return {
       ...defaults,
       ...raw,
@@ -1268,7 +1268,7 @@ var DomaineAppBundle = (() => {
       acceptedFormats: Array.isArray(raw.acceptedFormats) ? raw.acceptedFormats.filter((id) => FILE_FORMATS.some((f) => f.id === id)) : defaults.acceptedFormats,
       reminders: { ...defaults.reminders, ...raw.reminders || {} },
       customFields: Array.isArray(raw.customFields) ? raw.customFields.filter((f) => f && f.id && f.label) : [],
-      reminderDays: Array.isArray(raw.reminderDays) ? days : defaults.reminderDays,
+      reminderDays: Array.isArray(raw.reminderDays) ? days2 : defaults.reminderDays,
       statusLabels: { ...defaults.statusLabels, ...raw.statusLabels || {} }
     };
   }
@@ -1286,9 +1286,9 @@ var DomaineAppBundle = (() => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
   var isoOk = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s);
-  function isoShift2(iso, days) {
+  function isoShift2(iso, days2) {
     const [y, m, d] = iso.split("-").map(Number);
-    return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+    return new Date(Date.UTC(y, m - 1, d + days2)).toISOString().slice(0, 10);
   }
   function daysBetween(from, to) {
     const a = from.split("-").map(Number);
@@ -1746,7 +1746,7 @@ var DomaineAppBundle = (() => {
     archived: "Archivage"
   };
   var frDate = (iso) => iso ? iso.split("-").reverse().join("/") : "";
-  var daysText = (days) => days < 0 ? `en retard de ${-days} j` : days === 0 ? "aujourd'hui" : days === 1 ? "demain" : `dans ${days} j`;
+  var daysText = (days2) => days2 < 0 ? `en retard de ${-days2} j` : days2 === 0 ? "aujourd'hui" : days2 === 1 ? "demain" : `dans ${days2} j`;
   var CHECK_STATUS_LABEL = { conform: "Conforme", nonconform: "Non conforme", tocheck: "\xC0 v\xE9rifier" };
   var POOL_KIND_LABEL = { pool: "Piscine", spa: "Spa", jacuzzi: "Jacuzzi", other: "Autre \xE9quipement aquatique" };
   function defaultPoolParams() {
@@ -2225,7 +2225,7 @@ var DomaineAppBundle = (() => {
   var cleanOpDays = (op, today4) => op.archived || !op.nextDue ? null : daysBetween(today4, op.nextDue);
   var timeOf = (r) => `${r.date || ""} ${r.time || ""}`;
   var lotLate = (l, today4) => !l.archived && l.status === "stock" && !!l.dlc && l.dlc < today4;
-  var lotSoon = (l, today4, days = 2) => !l.archived && l.status === "stock" && !!l.dlc && l.dlc >= today4 && daysBetween(today4, l.dlc) <= days;
+  var lotSoon = (l, today4, days2 = 2) => !l.archived && l.status === "stock" && !!l.dlc && l.dlc >= today4 && daysBetween(today4, l.dlc) <= days2;
   function missedDays(eq, readings, day) {
     if (!eq.daily || eq.archived) return [];
     const since = eq.createdAt.slice(0, 10);
@@ -2964,13 +2964,14 @@ var DomaineAppBundle = (() => {
         incomeTaxRate: 1.7,
         defaultRoomCostPerNight: 50,
         defaultPoolCostPerNight: 8,
-        otaSources: ["airbnb", "booking", "abritel"]
+        otaSources: ["airbnb", "booking", "abritel"],
+        cancellation: { tiers: [], noShowPercent: null, note: "" }
       },
       rates: createDefaultRates(),
       modules,
       people: [],
       preferences: {
-        defaultTab: "timeline"
+        defaultTab: "today"
       }
     };
   }
@@ -3735,9 +3736,9 @@ var DomaineAppBundle = (() => {
   function useRateOverrides() {
     return (0, import_react2.useSyncExternalStore)(subscribe2, getRateOverrides, getRateOverrides);
   }
-  function addDaysIso(dateStr, days) {
+  function addDaysIso(dateStr, days2) {
     const [y, m, d] = dateStr.split("-").map((n) => parseInt(n, 10));
-    const date = new Date(y, m - 1, d + days);
+    const date = new Date(y, m - 1, d + days2);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   }
   function todayIso4() {
@@ -3800,8 +3801,8 @@ var DomaineAppBundle = (() => {
   function isLastMinute(checkIn, today4 = todayIso4(), settings = getSettings()) {
     const lm = settings.rates.lastMinute;
     if (!lm.enabled || !ratesEnabled(settings) || !checkIn) return false;
-    const days = daysBetween2(today4, checkIn);
-    return days >= 0 && days <= lm.daysBefore;
+    const days2 = daysBetween2(today4, checkIn);
+    return days2 >= 0 && days2 <= lm.daysBefore;
   }
 
   // src/utils/bookingUtils.ts
@@ -7820,9 +7821,9 @@ var DomaineAppBundle = (() => {
   function toIso(d) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
-  function addDays(iso, days) {
+  function addDays(iso, days2) {
     const [y, m, d] = iso.split("-").map(Number);
-    return toIso(new Date(y, m - 1, d + days));
+    return toIso(new Date(y, m - 1, d + days2));
   }
   function daysBetween3(fromIso, toIsoDate) {
     const [y1, m1, d1] = fromIso.split("-").map(Number);
@@ -8984,10 +8985,10 @@ var DomaineAppBundle = (() => {
   var import_react12 = __require("react");
 
   // src/modules/hygiene/guideRegisters.ts
-  function shiftDays(iso, days) {
+  function shiftDays(iso, days2) {
     const [y, m, d] = iso.split("-").map(Number);
     if (!y || !m || !d) return "";
-    const t = new Date(y, m - 1, d + days);
+    const t = new Date(y, m - 1, d + days2);
     return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
   }
   function daysFrom(iso, today4 = todayIso2()) {
@@ -15943,6 +15944,36 @@ function staffSiteStatus_(ctx, id, status, note) {
   // src/modules/parametrage/GeneralSections.tsx
   var import_react20 = __require("react");
 
+  // src/core/pricing/cancellation.ts
+  var emptyPolicy = () => ({ tiers: [], noShowPercent: null, note: "" });
+  function sortedTiers(p) {
+    return (p?.tiers || []).filter((t) => Number.isFinite(t.daysBefore) && t.daysBefore >= 0 && Number.isFinite(t.percent)).map((t) => ({ daysBefore: Math.floor(t.daysBefore), percent: Math.min(100, Math.max(0, t.percent)) })).sort((a, b) => b.daysBefore - a.daysBefore);
+  }
+  var hasPolicy = (p) => sortedTiers(p).length > 0;
+  var days = (n) => `${n} jour${n > 1 ? "s" : ""}`;
+  var dueText = (pc) => pc === 0 ? "sans frais" : pc >= 100 ? "la totalit\xE9 du s\xE9jour reste due" : `${pc} % du prix du s\xE9jour reste d\xFB`;
+  function policySentences(p) {
+    const tiers = sortedTiers(p);
+    if (tiers.length === 0) return [];
+    const out = [`Annulation \xE0 ${days(tiers[0].daysBefore)} ou plus avant la date d'arriv\xE9e : sans frais.`];
+    tiers.forEach((t, i) => {
+      const lower = tiers[i + 1];
+      const range = lower ? `entre ${days(t.daysBefore)} et ${days(lower.daysBefore)} avant l'arriv\xE9e` : `\xE0 moins de ${days(t.daysBefore)} de la date d'arriv\xE9e`;
+      out.push(`Annulation ${range} : ${dueText(t.percent)}.`);
+    });
+    return out;
+  }
+  function noShowSentence(p) {
+    if (!p || p.noShowPercent === null || !Number.isFinite(p.noShowPercent)) return "";
+    return `Si le client ne se pr\xE9sente pas \xE0 la date pr\xE9vue sans avoir pr\xE9venu l'\xE9tablissement, ${dueText(Math.min(100, Math.max(0, p.noShowPercent)))} et l'\xE9tablissement peut disposer \xE0 nouveau de l'h\xE9bergement.`;
+  }
+  function policyShort(p) {
+    const tiers = sortedTiers(p);
+    if (tiers.length === 0) return "";
+    const parts = tiers.map((t) => `\xE0 moins de ${days(t.daysBefore)} : ${t.percent === 0 ? "sans frais" : t.percent >= 100 ? "s\xE9jour d\xFB en totalit\xE9" : `${t.percent} % d\xFB`}`);
+    return `Annulation gratuite jusqu'\xE0 ${days(tiers[0].daysBefore)} avant l'arriv\xE9e ; ensuite ${parts.join(" ; ")}.`;
+  }
+
   // src/core/theme/shades.json
   var shades_default = {
     comment: "Nuances d'origine de la couleur principale (vert #325032). Chaque nuance devient la variable CSS --sy-<nom> ; les classes Tailwind sy-<hex> et emerald-<n> les utilisent. Lu par src/core/theme/theme.ts et par build_standalone_html_and_sync.cjs.",
@@ -16617,6 +16648,8 @@ function staffSiteStatus_(ctx, id, status, note) {
     const [draft, setDraft] = (0, import_react20.useState)(settings.pricing);
     const dirty = JSON.stringify(draft) !== JSON.stringify(settings.pricing);
     const set = (patch) => setDraft({ ...draft, ...patch });
+    const cancel = draft.cancellation || emptyPolicy();
+    const setCancel = (patch) => set({ cancellation: { ...cancel, ...patch } });
     return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
       /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
         SectionTitle,
@@ -16676,6 +16709,32 @@ function staffSiteStatus_(ctx, id, status, note) {
                 ]
               }
             )
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { "data-cancellation": true, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "block text-[11px] font-semibold text-neutral-700 mb-1.5", children: "R\xE8gles d'annulation" }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: "text-[11px] text-neutral-500 mb-2", children: "Saisies ici une seule fois : les CGV et le livret les reprennent (mention \xAB Source : Tarification \xBB). Au-del\xE0 du palier le plus \xE9loign\xE9, l'annulation est sans frais." }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "space-y-1.5", children: [
+            cancel.tiers.map((t, idx) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center gap-2 text-xs text-neutral-700", "data-cancel-tier": true, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "shrink-0", children: "\xC0 moins de" }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "w-24", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(NumberInput, { value: t.daysBefore, onChange: (v) => setCancel({ tiers: cancel.tiers.map((x, i) => i === idx ? { ...x, daysBefore: v ?? 0 } : x) }), suffix: "jours" }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "shrink-0", children: "de l'arriv\xE9e :" }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "w-20", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(NumberInput, { value: t.percent, onChange: (v) => setCancel({ tiers: cancel.tiers.map((x, i) => i === idx ? { ...x, percent: v ?? 0 } : x) }), suffix: "%" }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "shrink-0 hidden sm:inline", children: "d\xFB" }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("button", { type: "button", onClick: () => setCancel({ tiers: cancel.tiers.filter((_, i) => i !== idx) }), className: "p-1.5 text-neutral-400 hover:text-red-700 hover:bg-red-50 rounded-lg cursor-pointer", title: "Retirer ce palier", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Trash2, { className: "w-3.5 h-3.5" }) })
+            ] }, idx)),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("button", { type: "button", onClick: () => setCancel({ tiers: [...cancel.tiers, { daysBefore: 0, percent: 0 }] }), className: "text-[11px] font-semibold text-sy-325032 hover:underline cursor-pointer flex items-center gap-1", "data-add-cancel-tier": true, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Plus, { className: "w-3 h-3" }),
+              " Ajouter un palier"
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Field, { label: "Client qui ne se pr\xE9sente pas", hint: "Part du s\xE9jour due ; vide = non pr\xE9cis\xE9", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(NumberInput, { value: cancel.noShowPercent ?? void 0, onChange: (v) => setCancel({ noShowPercent: v ?? null }), optional: true, suffix: "%" }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Field, { label: "Pr\xE9cision libre", hint: "Ex. force majeure, plateformes en ligne", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("input", { value: cancel.note, onChange: (e) => setCancel({ note: e.target.value }), className: "w-full text-xs border border-neutral-200 rounded-lg px-2.5 py-2" }) })
+          ] }),
+          policySentences(cancel).length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("ul", { className: "mt-2 text-[11px] text-neutral-600 list-disc pl-4 space-y-0.5", "data-cancel-preview": true, children: [
+            policySentences(cancel).map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("li", { children: s }, i)),
+            noShowSentence(cancel) && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("li", { children: noShowSentence(cancel) })
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3", children: [
@@ -25480,9 +25539,14 @@ ${m.message}
       }
       case "cancelClient": {
         p.push("Toute annulation doit \xEAtre notifi\xE9e \xE0 l'\xE9tablissement par \xE9crit (courrier ou e-mail).");
-        const late = lateCancellation(f, missing);
+        const policy = settings.pricing.cancellation;
+        const fromPricing = hasPolicy(policy);
+        const late = fromPricing ? "" : lateCancellation(f, missing);
         const n = f.cancelFreeDays;
-        if (n === null) {
+        if (fromPricing) {
+          sources.push("pricing");
+          policySentences(policy).forEach((s) => p.push(s));
+        } else if (n === null) {
           missing.push("D\xE9lai d'annulation sans frais");
           p.push(`Annulation plus de ${TODO} jours avant la date d'arriv\xE9e : sans frais. Au-del\xE0 : ${late}.`);
         } else if (n > 0) {
@@ -25492,8 +25556,11 @@ ${m.message}
         } else {
           p.push(`En cas d'annulation, ${late}.`);
         }
-        const noShow = f.noShowRule === "total" ? "la totalit\xE9 du prix du s\xE9jour reste due" : f.noShowRule === "deposit" ? f.depositKind === "arrhes" || f.depositKind === "acompte" ? depositWords(f.depositKind).kept : (missing.push("R\xE8gle si le client ne se pr\xE9sente pas (aucun versement \xE0 la r\xE9servation)"), TODO) : (missing.push("R\xE8gle si le client ne se pr\xE9sente pas"), TODO);
-        p.push(`Si le client ne se pr\xE9sente pas \xE0 la date pr\xE9vue sans avoir pr\xE9venu l'\xE9tablissement, ${noShow} et l'\xE9tablissement peut disposer \xE0 nouveau de l'h\xE9bergement.`);
+        const policyNoShow = fromPricing ? noShowSentence(policy) : "";
+        const noShow = policyNoShow ? "" : f.noShowRule === "total" ? "la totalit\xE9 du prix du s\xE9jour reste due" : f.noShowRule === "deposit" ? f.depositKind === "arrhes" || f.depositKind === "acompte" ? depositWords(f.depositKind).kept : (missing.push("R\xE8gle si le client ne se pr\xE9sente pas (aucun versement \xE0 la r\xE9servation)"), TODO) : (missing.push("R\xE8gle si le client ne se pr\xE9sente pas"), TODO);
+        if (policyNoShow) p.push(policyNoShow);
+        else p.push(`Si le client ne se pr\xE9sente pas \xE0 la date pr\xE9vue sans avoir pr\xE9venu l'\xE9tablissement, ${noShow} et l'\xE9tablissement peut disposer \xE0 nouveau de l'h\xE9bergement.`);
+        if (fromPricing && policy?.note.trim()) p.push(sentence(policy.note.trim()));
         p.push(
           f.shortenedStay === "refund" ? "En cas d'arriv\xE9e retard\xE9e ou de d\xE9part anticip\xE9, les nuits non consomm\xE9es sont rembours\xE9es." : "En cas d'arriv\xE9e retard\xE9e ou de d\xE9part anticip\xE9, le prix du s\xE9jour reste int\xE9gralement d\xFB."
         );
@@ -25734,7 +25801,7 @@ ${body}
       articleKind: "cancelClient",
       sectionKind: "faq",
       title: "Puis-je annuler ma r\xE9servation ?",
-      text: n === null || !late || missing.length ? "" : n > 0 ? `Oui, sans frais jusqu'\xE0 ${n} ${plural(n, "jour", "jours")} avant votre arriv\xE9e. Ensuite, ${late.replace(" \xE0 l'\xE9tablissement", "")}. Pour une r\xE9servation faite sur une plateforme, ce sont ses conditions qui s'appliquent.` : `${capitalize(late.replace(" \xE0 l'\xE9tablissement", ""))} en cas d'annulation. Pour une r\xE9servation faite sur une plateforme, ce sont ses conditions qui s'appliquent.`
+      text: hasPolicy(settings.pricing.cancellation) ? `${policyShort(settings.pricing.cancellation)} Pour une r\xE9servation faite sur une plateforme, ce sont ses conditions qui s'appliquent.` : n === null || !late || missing.length ? "" : n > 0 ? `Oui, sans frais jusqu'\xE0 ${n} ${plural(n, "jour", "jours")} avant votre arriv\xE9e. Ensuite, ${late.replace(" \xE0 l'\xE9tablissement", "")}. Pour une r\xE9servation faite sur une plateforme, ce sont ses conditions qui s'appliquent.` : `${capitalize(late.replace(" \xE0 l'\xE9tablissement", ""))} en cas d'annulation. Pour une r\xE9servation faite sur une plateforme, ce sont ses conditions qui s'appliquent.`
     });
     return list3;
   }
@@ -26660,8 +26727,8 @@ ${body}
     return Object.values(expenses2).filter((e) => e && e.date >= period.from && e.date <= period.to).sort((a, b) => b.date.localeCompare(a.date));
   }
   function usageShare(asset) {
-    const days = Number(asset.usageDays);
-    return days > 0 ? Math.min(365, Math.max(1, days)) / 365 : 1;
+    const days2 = Number(asset.usageDays);
+    return days2 > 0 ? Math.min(365, Math.max(1, days2)) / 365 : 1;
   }
   function assetLifeDays(asset) {
     return Math.round(asset.years * 365.25 / usageShare(asset));
@@ -26966,7 +27033,7 @@ ${body}
     return { reservations, expenses: expenses2, assets: assets2, externalReviews, mealOrders, housekeeping, settings, registry: readInvoiceRegistry(), capacityCache: /* @__PURE__ */ new Map() };
   }
   var DAY = 864e5;
-  var isoAdd = (iso, days) => new Date(Date.parse(`${iso}T00:00:00Z`) + days * DAY).toISOString().slice(0, 10);
+  var isoAdd = (iso, days2) => new Date(Date.parse(`${iso}T00:00:00Z`) + days2 * DAY).toISOString().slice(0, 10);
   var lastDayOfMonth = (key) => {
     const [y, m] = key.split("-").map(Number);
     return `${key}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, "0")}`;
@@ -29238,9 +29305,9 @@ Les r\xE9servations d\xE9j\xE0 enregistr\xE9es ne changent pas.`)) return;
       }
     };
     const card2 = (t) => {
-      const days = t.dueDate ? daysBetween(payload.today, t.dueDate) : null;
+      const days2 = t.dueDate ? daysBetween(payload.today, t.dueDate) : null;
       const isDone3 = t.status === "done";
-      return /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)("div", { className: `bg-white border rounded-2xl p-3.5 space-y-2 ${days !== null && days < 0 && !isDone3 ? "border-red-300" : "border-neutral-200"} ${isDone3 ? "opacity-70" : ""}`, "data-staff-site-task": t.id, children: [
+      return /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)("div", { className: `bg-white border rounded-2xl p-3.5 space-y-2 ${days2 !== null && days2 < 0 && !isDone3 ? "border-red-300" : "border-neutral-200"} ${isDone3 ? "opacity-70" : ""}`, "data-staff-site-task": t.id, children: [
         /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)("div", { className: "flex flex-wrap items-start justify-between gap-2", children: [
           /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)("div", { className: "min-w-0", children: [
             /* @__PURE__ */ (0, import_jsx_runtime45.jsx)("div", { className: "font-serif font-bold text-sm text-neutral-900", children: t.title }),
@@ -29252,7 +29319,7 @@ Les r\xE9servations d\xE9j\xE0 enregistr\xE9es ne changent pas.`)) return;
           ] })
         ] }),
         t.description && /* @__PURE__ */ (0, import_jsx_runtime45.jsx)("p", { className: "text-xs text-neutral-700 whitespace-pre-line", children: t.description }),
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)("div", { className: `text-[11px] ${days !== null && days < 0 && !isDone3 ? "text-red-700 font-semibold" : "text-neutral-500"}`, children: isDone3 ? `Termin\xE9e le ${frDate(t.doneDate)}${t.workDone ? ` : ${t.workDone}` : ""}` : t.dueDate ? `Pr\xE9vue le ${frDate(t.dueDate)}${days !== null ? ` (${daysText(days)})` : ""}` : "Sans date pr\xE9vue" }),
+        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)("div", { className: `text-[11px] ${days2 !== null && days2 < 0 && !isDone3 ? "text-red-700 font-semibold" : "text-neutral-500"}`, children: isDone3 ? `Termin\xE9e le ${frDate(t.doneDate)}${t.workDone ? ` : ${t.workDone}` : ""}` : t.dueDate ? `Pr\xE9vue le ${frDate(t.dueDate)}${days2 !== null ? ` (${daysText(days2)})` : ""}` : "Sans date pr\xE9vue" }),
         finishing === t.id ? /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)("div", { className: "space-y-2", children: [
           /* @__PURE__ */ (0, import_jsx_runtime45.jsx)("textarea", { value: note, onChange: (e) => setNote(e.target.value), rows: 2, placeholder: "Ce qui a \xE9t\xE9 fait (facultatif)", "aria-label": "Travail effectu\xE9", className: "w-full p-2.5 text-sm bg-neutral-50 border border-neutral-200 rounded-xl" }),
           /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)("div", { className: "flex gap-2 justify-end", children: [
@@ -29786,7 +29853,7 @@ Cordialement`
   var covers = (o) => `${o.adults} adulte${o.adults > 1 ? "s" : ""}${o.children ? `, ${o.children} enfant${o.children > 1 ? "s" : ""}` : ""}`;
   var StaffMeals = ({ orders, onStatus }) => {
     const [busy, setBusy] = (0, import_react56.useState)(null);
-    const days = (0, import_react56.useMemo)(() => {
+    const days2 = (0, import_react56.useMemo)(() => {
       const byDay = /* @__PURE__ */ new Map();
       [...orders].sort((a, b) => (a.date + (a.time || "99:99")).localeCompare(b.date + (b.time || "99:99"))).forEach((o) => byDay.set(o.date, [...byDay.get(o.date) || [], o]));
       return Array.from(byDay.entries());
@@ -29799,14 +29866,14 @@ Cordialement`
         setBusy(null);
       }
     };
-    if (days.length === 0) {
+    if (days2.length === 0) {
       return /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)("div", { className: "bg-white border border-dashed border-neutral-300 rounded-2xl p-8 text-center", children: [
         /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(ChefHat, { className: "w-6 h-6 text-neutral-300 mx-auto mb-2" }),
         /* @__PURE__ */ (0, import_jsx_runtime48.jsx)("p", { className: "text-sm font-semibold text-neutral-800", children: "Aucune commande de repas \xE0 venir." }),
         /* @__PURE__ */ (0, import_jsx_runtime48.jsx)("p", { className: "text-xs text-neutral-500 mt-1", children: "Les nouvelles commandes apparaissent ici d\xE8s qu'un voyageur les passe." })
       ] });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)("div", { className: "space-y-5", children: days.map(([date, list3]) => {
+    return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)("div", { className: "space-y-5", children: days2.map(([date, list3]) => {
       const isToday = date === today3();
       const moments = Array.from(new Set(list3.map((o) => o.momentName || o.momentId)));
       return /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)("section", { children: [
@@ -30238,6 +30305,21 @@ Cordialement`
       )
     ] }) });
   };
+
+  // src/core/settings/homeTab.ts
+  var FLAG = "domaine_sylvaria_home_today_v1";
+  function migrateHomeTab() {
+    try {
+      if (localStorage.getItem(FLAG)) return false;
+      localStorage.setItem(FLAG, "1");
+      const s = getSettings();
+      if (s.preferences.defaultTab === "today") return false;
+      saveSettings({ ...s, preferences: { ...s.preferences, defaultTab: "today" } }, "Onglet d'ouverture : Aujourd'hui.");
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   // src/core/migrations/002_pricingBasis.ts
   var MIGRATION_002_DONE_KEY = "domaine_sylvaria_migration_002_faite";
@@ -38752,7 +38834,7 @@ Cliquer pour modifier le tarif` : void 0,
   };
   var frDate6 = (iso) => iso ? iso.split("-").reverse().join("/") : "";
   var StatusChip2 = ({ status, admin }) => /* @__PURE__ */ (0, import_jsx_runtime67.jsx)("span", { className: `px-2 py-0.5 rounded-md text-[10px] font-bold ${STATUS_STYLE3[status]}`, children: admin.statusLabels[status] });
-  var daysText2 = (days) => days < 0 ? `en retard de ${-days} j` : days === 0 ? "aujourd'hui" : days === 1 ? "demain" : `dans ${days} j`;
+  var daysText2 = (days2) => days2 < 0 ? `en retard de ${-days2} j` : days2 === 0 ? "aujourd'hui" : days2 === 1 ? "demain" : `dans ${days2} j`;
   var AdminView = ({ onToast }) => {
     const settings = useSettings();
     const admin = getAdmin(settings);
@@ -43386,9 +43468,9 @@ Cliquer pour modifier le tarif` : void 0,
     const [stale, setStale] = (0, import_react91.useState)(String(hy.staleDays));
     const settings = getSettings();
     const saveRef = () => {
-      const days = Math.round(Number(stale.replace(",", ".")));
-      if (!(days >= 1)) return onToast("Indiquez un nombre de jours d'au moins 1.");
-      saveHygiene(settings, { ...hy, allergenNotes: Object.fromEntries(Object.entries(notes).filter(([, v]) => v.trim())), clientMention: mention.trim() || hy.clientMention, staleDays: days }, "Allerg\xE8nes : pr\xE9cisions enregistr\xE9es.");
+      const days2 = Math.round(Number(stale.replace(",", ".")));
+      if (!(days2 >= 1)) return onToast("Indiquez un nombre de jours d'au moins 1.");
+      saveHygiene(settings, { ...hy, allergenNotes: Object.fromEntries(Object.entries(notes).filter(([, v]) => v.trim())), clientMention: mention.trim() || hy.clientMention, staleDays: days2 }, "Allerg\xE8nes : pr\xE9cisions enregistr\xE9es.");
       onToast("Enregistr\xE9. La liste r\xE9glementaire n'est pas modifi\xE9e.");
     };
     return /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)("div", { className: "space-y-3", children: [
@@ -43665,8 +43747,8 @@ Cliquer pour modifier le tarif` : void 0,
       persist7({ ...e, title: e.title.trim(), by: e.by || getSiteActor() }, isNew ? `${def.singular[0].toUpperCase()}${def.singular.slice(1)} enregistr\xE9(e).` : "Fiche modifi\xE9e.");
     };
     const markDone = () => {
-      const days = parseFloat((e.data.everyDays || "").replace(",", "."));
-      const next = { ...e, date: todayIso2(), data: { ...e.data, nextDue: days > 0 ? shiftDays(todayIso2(), Math.round(days)) : "" }, by: getSiteActor() };
+      const days2 = parseFloat((e.data.everyDays || "").replace(",", "."));
+      const next = { ...e, date: todayIso2(), data: { ...e.data, nextDue: days2 > 0 ? shiftDays(todayIso2(), Math.round(days2)) : "" }, by: getSiteActor() };
       persist7(next, "R\xE9alis\xE9 aujourd'hui : \xE9ch\xE9ance reprogramm\xE9e.");
     };
     const withdrawLots = () => {
@@ -44627,15 +44709,15 @@ Cliquer pour modifier le tarif` : void 0,
                 frDate(o.nextDue)
               ] })
             ] }) }, o.id)),
-            d.missed.map(({ q, days }) => /* @__PURE__ */ (0, import_jsx_runtime89.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)("button", { type: "button", className: "w-full text-left flex items-center justify-between gap-2 p-2 rounded-lg border border-red-200 bg-red-50 text-xs cursor-pointer", onClick: () => onGo("temperatures", "new"), children: [
+            d.missed.map(({ q, days: days2 }) => /* @__PURE__ */ (0, import_jsx_runtime89.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)("button", { type: "button", className: "w-full text-left flex items-center justify-between gap-2 p-2 rounded-lg border border-red-200 bg-red-50 text-xs cursor-pointer", onClick: () => onGo("temperatures", "new"), children: [
               /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)("span", { children: [
                 "Aucun relev\xE9 : ",
                 /* @__PURE__ */ (0, import_jsx_runtime89.jsx)("b", { children: q.name })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Chip2, { tone: "red", children: [
-                days.length,
+                days2.length,
                 " jour",
-                days.length > 1 ? "s" : ""
+                days2.length > 1 ? "s" : ""
               ] })
             ] }) }, q.id)),
             d.lateInc.map((i) => /* @__PURE__ */ (0, import_jsx_runtime89.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)("button", { type: "button", className: "w-full text-left flex items-center justify-between gap-2 p-2 rounded-lg border border-red-200 bg-red-50 text-xs cursor-pointer", onClick: () => onGo("incidents", i.id), children: [
@@ -47053,10 +47135,33 @@ body { font-family: ${fontName(doc.font, doc.font)}; font-size: ${doc.size}pt; }
     const fileRef = (0, import_react106.useRef)(null);
     const hyOn = isModuleEnabled("hygiene", settings);
     const staffOn = isModuleEnabled("staff", settings);
+    const hkOn = isModuleEnabled("housekeeping", settings);
+    const mealsOn = isModuleEnabled("meals", settings);
+    const storedTasks = useStoredTasks();
+    const orders = useMealOrders(mealsOn);
+    const housekeeping = (0, import_react106.useMemo)(() => {
+      if (!hkOn) return { late: [], todo: [] };
+      const hk = getHousekeepingSettings(settings);
+      const tasks2 = buildTasks({ settings, hk, reservations, stored: storedTasks, from: addDays(today4, -60), to: today4 });
+      const open = tasks2.filter((t) => !t.dismissed && !t.reservationMissing && !isDone(hk, t));
+      return { late: open.filter((t) => isLate(hk, t)), todo: open.filter((t) => !isLate(hk, t) && t.date === today4) };
+    }, [hkOn, settings, reservations, storedTasks, today4]);
+    const mealOrders = (0, import_react106.useMemo)(() => {
+      const live = orders.orders.filter((o) => o.status === "new" || o.status === "confirmed");
+      const tomorrow = addDays(today4, 1);
+      return {
+        toConfirm: live.filter((o) => o.status === "new" && o.date >= today4),
+        today: live.filter((o) => o.date === today4).sort((a, b) => a.time.localeCompare(b.time)),
+        tomorrow: live.filter((o) => o.date === tomorrow).sort((a, b) => a.time.localeCompare(b.time))
+      };
+    }, [orders, today4]);
     const roomName = (id) => settings.accommodations.find((a) => a.id === id)?.name || id;
     const stays = (0, import_react106.useMemo)(() => staysOfDay(reservations, today4, roomName), [reservations, today4, settings.accommodations]);
     const items = (0, import_react106.useMemo)(() => {
       const out = [];
+      housekeeping.late.forEach((t) => out.push({ id: `hl${t.id}`, label: `M\xE9nage en retard : ${t.title}`, detail: `${t.zoneName} \xB7 pr\xE9vu le ${frDate2(t.dueDate || t.date)}`, tone: "red", tab: "housekeeping" }));
+      housekeeping.todo.forEach((t) => out.push({ id: `ht${t.id}`, label: `M\xE9nage \xE0 faire aujourd'hui : ${t.title}`, detail: `${t.zoneName}${t.time ? ` \xB7 ${t.time}` : ""}`, tone: "amber", tab: "housekeeping" }));
+      if (mealOrders.toConfirm.length > 0) out.push({ id: "meals-new", label: `${mealOrders.toConfirm.length} commande(s) de repas \xE0 confirmer`, detail: "Voyageurs en attente de r\xE9ponse", tone: "red", tab: "meals", section: "orders" });
       if (hyOn) {
         cleanOpList(records3).filter((o) => !o.archived && (cleanOpDays(o, today4) ?? 0) < 0).forEach((o) => out.push({ id: o.id, label: `Nettoyage en retard : ${o.zone}`, detail: o.operation, tone: "red", tab: "hygiene", section: "cleaning" }));
         cleanOpList(records3).filter((o) => !o.archived && (cleanOpDays(o, today4) ?? 1) === 0).forEach((o) => out.push({ id: `d${o.id}`, label: `\xC0 nettoyer aujourd'hui : ${o.zone}`, detail: o.operation, tone: "amber", tab: "hygiene", section: "cleaning" }));
@@ -47073,7 +47178,7 @@ body { font-family: ${fontName(doc.font, doc.font)}; font-size: ${doc.size}pt; }
         dues(staffList(staffMap), readStaffSettings(settings), today4).filter((d) => d.state !== "valid").slice(0, 10).forEach((d, i) => out.push({ id: `s${d.member.id}${i}`, label: `${d.member.name} : ${d.title}`, detail: STATE_LABEL[d.state] + (d.validUntil ? ` (${frDate2(d.validUntil)})` : ""), tone: d.state === "soon" ? "amber" : "red", tab: "staff" }));
       }
       return out.sort((a, b) => (a.tone === "red" ? 0 : 1) - (b.tone === "red" ? 0 : 1));
-    }, [records3, staffMap, settings, today4, hyOn, staffOn]);
+    }, [records3, staffMap, settings, today4, hyOn, staffOn, housekeeping, mealOrders]);
     const hits = (0, import_react106.useMemo)(() => {
       if (!query.trim()) return [];
       const docs3 = [];
@@ -47192,7 +47297,7 @@ body { font-family: ${fontName(doc.font, doc.font)}; font-size: ${doc.size}pt; }
             ] }),
             items.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime102.jsxs)("p", { className: "text-xs text-neutral-500", children: [
               "Rien \xE0 signaler.",
-              !hyOn && !staffOn && " Activez Hygi\xE8ne alimentaire ou Personnel pour y voir leurs alertes."
+              !hyOn && !staffOn && !hkOn && " Activez M\xE9nage, Hygi\xE8ne alimentaire ou Personnel pour y voir leurs alertes."
             ] }) : /* @__PURE__ */ (0, import_jsx_runtime102.jsxs)("ul", { className: "space-y-1.5", children: [
               items.slice(0, 20).map((i) => /* @__PURE__ */ (0, import_jsx_runtime102.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime102.jsxs)("button", { type: "button", onClick: () => onOpen(i.tab, i.section), "data-today-item": true, className: "w-full text-left flex items-center justify-between gap-2 p-2 rounded-lg border border-neutral-200 hover:border-neutral-300 text-xs cursor-pointer", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime102.jsxs)("span", { className: "min-w-0", children: [
@@ -47211,6 +47316,29 @@ body { font-family: ${fontName(doc.font, doc.font)}; font-size: ${doc.size}pt; }
               ] })
             ] })
           ] })
+        ] }),
+        mealsOn && /* @__PURE__ */ (0, import_jsx_runtime102.jsxs)("section", { className: "bg-white rounded-2xl border border-neutral-200 p-3 space-y-2", "data-today-meals": true, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime102.jsx)("h3", { className: "font-serif font-bold text-sm text-neutral-900", children: "Repas command\xE9s" }),
+          mealOrders.today.length + mealOrders.tomorrow.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime102.jsxs)("p", { className: "text-xs text-neutral-500", children: [
+            "Aucun repas command\xE9 pour aujourd'hui ni demain.",
+            !orders.at && " (Commandes pas encore lues : connecteur requis.)"
+          ] }) : [["Aujourd'hui", mealOrders.today], ["Demain", mealOrders.tomorrow]].map(([label, list3]) => list3.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime102.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime102.jsx)("div", { className: "text-[11px] font-bold text-neutral-600 mb-1", children: label }),
+            /* @__PURE__ */ (0, import_jsx_runtime102.jsx)("ul", { className: "space-y-1", children: list3.map((o) => /* @__PURE__ */ (0, import_jsx_runtime102.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime102.jsxs)("button", { type: "button", onClick: () => onOpen("meals", "orders"), "data-meal-order": o.id, className: "w-full text-left flex items-center justify-between gap-2 text-xs p-1.5 rounded-lg hover:bg-neutral-50 cursor-pointer", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime102.jsxs)("span", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime102.jsx)("b", { className: "text-neutral-900", children: o.time || "\u2014" }),
+                " \xB7 ",
+                o.momentName || "Repas",
+                " \xB7 ",
+                o.name || "Sans nom"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime102.jsxs)("span", { className: "text-neutral-500 whitespace-nowrap", children: [
+                o.adults + o.children,
+                " pers. \xB7 ",
+                o.status === "new" ? "\xE0 confirmer" : "confirm\xE9e"
+              ] })
+            ] }) }, o.id)) })
+          ] }, label))
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime102.jsxs)("section", { className: `rounded-2xl border p-3 space-y-2 ${age === null || age > 7 ? "bg-amber-50 border-amber-200" : "bg-white border-neutral-200"}`, "data-backup": true, children: [
           /* @__PURE__ */ (0, import_jsx_runtime102.jsx)("h3", { className: "font-serif font-bold text-sm text-neutral-900", children: "Sauvegarde des donn\xE9es" }),
@@ -47855,7 +47983,7 @@ body { font-family: ${fontName(doc.font, doc.font)}; font-size: ${doc.size}pt; }
     accommodations: "Param\xE9trage > H\xE9bergements",
     services: "Param\xE9trage > Services",
     resources: "Param\xE9trage > Espaces",
-    pricing: "Param\xE9trage > Tarifs",
+    pricing: "Param\xE9trage > Tarification",
     platforms: "Param\xE9trage > Plateformes",
     book: "Livret d'accueil",
     terms: "Saisi ici"
@@ -48012,6 +48140,41 @@ body { font-family: ${fontName(doc.font, doc.font)}; font-size: ${doc.size}pt; }
       case "cancelClient": {
         const hasDeposit = facts.depositKind === "arrhes" || facts.depositKind === "acompte";
         const depositLabel = facts.depositKind === "acompte" ? "L'acompte reste acquis" : "Les arrhes restent acquises";
+        if (hasPolicy(s.pricing.cancellation)) {
+          return /* @__PURE__ */ (0, import_jsx_runtime105.jsxs)("div", { className: "space-y-3", "data-cancel-from-pricing": true, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime105.jsxs)("div", { className: "space-y-1 p-2.5 rounded-xl bg-sky-50 border border-sky-100", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime105.jsx)("p", { className: "text-[11px] font-semibold text-sky-900", children: "R\xE8gles d'annulation reprises du Param\xE9trage > Tarification" }),
+              /* @__PURE__ */ (0, import_jsx_runtime105.jsxs)("ul", { className: "text-[11px] text-neutral-700 list-disc pl-4 space-y-0.5", children: [
+                policySentences(s.pricing.cancellation).map((t, i) => /* @__PURE__ */ (0, import_jsx_runtime105.jsx)("li", { children: t }, i)),
+                noShowSentence(s.pricing.cancellation) && /* @__PURE__ */ (0, import_jsx_runtime105.jsx)("li", { children: noShowSentence(s.pricing.cancellation) })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime105.jsx)("p", { className: "text-[10px] text-neutral-500", children: "\xC0 modifier dans le Param\xE9trage (roue crant\xE9e) > Tarification : les CGV et le livret suivent." })
+            ] }),
+            s.pricing.cancellation?.noShowPercent == null && /* @__PURE__ */ (0, import_jsx_runtime105.jsx)(Field, { label: "Si le client ne se pr\xE9sente pas", children: /* @__PURE__ */ (0, import_jsx_runtime105.jsx)(
+              Select,
+              {
+                value: facts.noShowRule,
+                onChange: (v) => set({ noShowRule: v }),
+                options: [
+                  { value: "", label: "\xC0 choisir\u2026" },
+                  ...hasDeposit ? [{ value: "deposit", label: depositLabel }] : [],
+                  { value: "total", label: "La totalit\xE9 du s\xE9jour reste due" }
+                ]
+              }
+            ) }),
+            /* @__PURE__ */ (0, import_jsx_runtime105.jsx)(Field, { label: "Arriv\xE9e retard\xE9e ou d\xE9part anticip\xE9", children: /* @__PURE__ */ (0, import_jsx_runtime105.jsx)(
+              Select,
+              {
+                value: facts.shortenedStay,
+                onChange: (v) => set({ shortenedStay: v }),
+                options: [
+                  { value: "due", label: "Le s\xE9jour reste d\xFB en entier" },
+                  { value: "refund", label: "Les nuits non consomm\xE9es sont rembours\xE9es" }
+                ]
+              }
+            ) })
+          ] });
+        }
         return /* @__PURE__ */ (0, import_jsx_runtime105.jsxs)("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3", children: [
           /* @__PURE__ */ (0, import_jsx_runtime105.jsx)(Field, { label: "Annulation sans frais jusqu'\xE0", hint: "Nombre de jours avant l'arriv\xE9e ; 0 = jamais sans frais.", children: /* @__PURE__ */ (0, import_jsx_runtime105.jsx)(NumberInput, { value: facts.cancelFreeDays ?? void 0, onChange: (v) => set({ cancelFreeDays: v ?? null }), optional: true, suffix: "j" }) }),
           /* @__PURE__ */ (0, import_jsx_runtime105.jsx)(Field, { label: facts.cancelFreeDays ? "Ensuite (annulation tardive)" : "En cas d'annulation", children: /* @__PURE__ */ (0, import_jsx_runtime105.jsx)(
@@ -53948,6 +54111,7 @@ ${establishment}`;
       return false;
     }
   })();
+  if (!staffAccess && !bookAccess) migrateHomeTab();
   function App() {
     if (staffAccess) return /* @__PURE__ */ (0, import_jsx_runtime115.jsx)(StaffApp, { code: staffAccess.code, connectorUrl: staffAccess.connectorUrl });
     if (bookAccess)
@@ -54765,6 +54929,7 @@ Que faire : r\xE9duisez ou supprimez des photos (livret, tickets de d\xE9penses)
           activeTab === "staff" && /* @__PURE__ */ (0, import_jsx_runtime115.jsx)(StaffView, { onToast: showToast }),
           activeTab === "today" && /* @__PURE__ */ (0, import_jsx_runtime115.jsx)(TodayView, { reservations: effectiveReservations, onToast: showToast, onOpen: (tab, section2) => {
             if (tab === "hygiene" && section2) requestHygieneView(section2);
+            if (tab === "meals" && section2 === "orders") requestMealsView("orders");
             setActiveTab(tab);
           } }),
           activeTab === "hygiene" && /* @__PURE__ */ (0, import_jsx_runtime115.jsx)(HygieneView, { onToast: showToast }),
