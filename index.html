@@ -9094,6 +9094,20 @@ var DomaineAppBundle = (() => {
     }
   }
   var defaultBanner = (title = "") => ({ enabled: true, title, color: "", textColor: "#ffffff", font: "cambria", size: 24, showLogo: true });
+  var defaultFooter = () => ({ enabled: false, color: "", textColor: "#ffffff", font: "cambria", size: 10, align: "center", name: true, address: true, phone: true, email: false, website: false, siret: false, text: "" });
+  function footerLines(f, vars) {
+    const parts = [
+      f.name && vars.etablissement,
+      f.address && vars.adresse,
+      f.phone && vars.telephone && `T\xE9l. ${vars.telephone}`,
+      f.email && vars.email,
+      f.website && vars.site,
+      f.siret && vars.siret && `SIRET ${vars.siret}`
+    ].filter((x) => !!x);
+    const lines2 = parts.length ? [parts.join("  \xB7  ")] : [];
+    const extra = fillText(f.text, vars).trim();
+    return extra ? [...lines2, ...extra.split("\n")] : lines2;
+  }
   function newDocument(name = "Nouveau document", withBanner = true) {
     const now = (/* @__PURE__ */ new Date()).toISOString();
     return {
@@ -9104,6 +9118,7 @@ var DomaineAppBundle = (() => {
       archived: false,
       font: "cambria",
       size: 11,
+      footer: defaultFooter(),
       banner: { ...defaultBanner(name), enabled: withBanner },
       blocks: [newHeading("Titre de section"), newParagraph("")]
     };
@@ -9243,6 +9258,7 @@ var DomaineAppBundle = (() => {
       ...d,
       ...raw,
       banner: { ...defaultBanner(raw.name || ""), ...raw.banner || {} },
+      footer: { ...defaultFooter(), ...raw.footer || {} },
       blocks: Array.isArray(raw.blocks) ? raw.blocks.filter((b) => b && typeof b.id === "string" && typeof b.type === "string") : [],
       font: FONTS.some((f) => f.id === raw.font) ? raw.font : "cambria",
       size: raw.size >= 6 && raw.size <= 36 ? raw.size : 11
@@ -44669,6 +44685,15 @@ Cliquer pour modifier le tarif` : void 0,
       /* @__PURE__ */ (0, import_jsx_runtime94.jsx)("td", { style: { width: 100, background: color, ...EXACT } })
     ] }) }) });
   };
+  var FooterView = ({ footer, ctx, extra }) => {
+    const color = normalizeHex(footer.color) || normalizeHex(ctx.themeColor) || DEFAULT_THEME_COLOR;
+    const lines2 = footerLines({ ...footer, text: extra ? "" : footer.text }, ctx.vars);
+    return /* @__PURE__ */ (0, import_jsx_runtime94.jsx)("table", { style: { width: "100%", borderCollapse: "collapse", background: color, border: `1px solid ${color}`, ...EXACT }, "data-doc-footer": true, children: /* @__PURE__ */ (0, import_jsx_runtime94.jsx)("tbody", { children: /* @__PURE__ */ (0, import_jsx_runtime94.jsx)("tr", { style: { background: color, ...EXACT }, children: /* @__PURE__ */ (0, import_jsx_runtime94.jsxs)("td", { style: { padding: "7pt 10pt", background: color, color: footer.textColor || "#ffffff", fontFamily: fontStack(footer.font, footer.font), fontSize: `pt`, textAlign: footer.align, lineHeight: 1.35, ...EXACT }, children: [
+      lines2.map((l, i) => /* @__PURE__ */ (0, import_jsx_runtime94.jsx)("div", { children: l }, i)),
+      extra,
+      lines2.length === 0 && !extra && /* @__PURE__ */ (0, import_jsx_runtime94.jsx)("div", { children: "\xA0" })
+    ] }) }) }) });
+  };
   var BlockView = ({ block: b, doc, ctx }) => {
     switch (b.type) {
       case "text":
@@ -44703,9 +44728,10 @@ Cliquer pour modifier le tarif` : void 0,
         return /* @__PURE__ */ (0, import_jsx_runtime94.jsx)("div", { style: { pageBreakAfter: "always", breakAfter: "page", height: 0 } });
     }
   };
-  var DocumentSheet = ({ doc, ctx }) => /* @__PURE__ */ (0, import_jsx_runtime94.jsxs)("div", { style: { fontFamily: fontStack(doc.font, doc.font), fontSize: `${doc.size}pt`, color: "#111111", background: "#ffffff" }, "data-doc-sheet": true, children: [
+  var DocumentSheet = ({ doc, ctx }) => /* @__PURE__ */ (0, import_jsx_runtime94.jsxs)("div", { style: { fontFamily: fontStack(doc.font, doc.font), fontSize: `${doc.size}pt`, color: "#111111", background: "#ffffff", display: "flex", flexDirection: "column", minHeight: doc.footer.enabled ? "262mm" : void 0 }, "data-doc-sheet": true, children: [
     doc.banner.enabled && /* @__PURE__ */ (0, import_jsx_runtime94.jsx)(BannerView, { banner: doc.banner, ctx }),
-    /* @__PURE__ */ (0, import_jsx_runtime94.jsx)("div", { style: { paddingTop: doc.banner.enabled ? "14pt" : 0 }, children: doc.blocks.map((b) => /* @__PURE__ */ (0, import_jsx_runtime94.jsx)(BlockView, { block: b, doc, ctx }, b.id)) })
+    /* @__PURE__ */ (0, import_jsx_runtime94.jsx)("div", { style: { paddingTop: doc.banner.enabled ? "14pt" : 0, flex: 1 }, children: doc.blocks.map((b) => /* @__PURE__ */ (0, import_jsx_runtime94.jsx)(BlockView, { block: b, doc, ctx }, b.id)) }),
+    doc.footer.enabled && /* @__PURE__ */ (0, import_jsx_runtime94.jsx)("div", { style: { marginTop: "14pt" }, children: /* @__PURE__ */ (0, import_jsx_runtime94.jsx)(FooterView, { footer: doc.footer, ctx }) })
   ] });
 
   // src/modules/docgen/Editor.tsx
@@ -44715,6 +44741,7 @@ Cliquer pour modifier le tarif` : void 0,
   var escapeText = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
   var Editable = ({ html, plain, onCommit, style, onFocus, onEnter, autoFocus, label, placeholder }) => {
     const ref = (0, import_react99.useRef)(null);
+    const initial = (0, import_react99.useRef)(plain ? escapeText(html) : html);
     const read2 = () => {
       const el = ref.current;
       if (!el) return "";
@@ -44768,7 +44795,7 @@ Cliquer pour modifier le tarif` : void 0,
           if (t) document.execCommand("insertText", false, t);
         },
         style: { outline: "none", minHeight: "1.4em", whiteSpace: plain ? "pre-wrap" : void 0, ...style },
-        dangerouslySetInnerHTML: { __html: plain ? escapeText(html) : html }
+        dangerouslySetInnerHTML: { __html: initial.current }
       }
     );
   };
@@ -44838,6 +44865,32 @@ Cliquer pour modifier le tarif` : void 0,
       }
     };
     const tools = (() => {
+      if (selected === "footer") {
+        const f = doc.footer;
+        const set = (p) => onChange({ ...doc, footer: { ...f, ...p } }, false);
+        const checks = [["name", "Nom"], ["address", "Adresse"], ["phone", "T\xE9l\xE9phone"], ["email", "E-mail"], ["website", "Site web"], ["siret", "SIRET"]];
+        return /* @__PURE__ */ (0, import_jsx_runtime95.jsxs)(import_jsx_runtime95.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("span", { className: "text-[11px] font-bold text-neutral-700", children: "Bandeau du bas" }),
+          checks.map(([k, label]) => /* @__PURE__ */ (0, import_jsx_runtime95.jsxs)("label", { className: "flex items-center gap-1 text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("input", { type: "checkbox", checked: !!f[k], onChange: (e) => set({ [k]: e.target.checked }), className: "accent-sy-325032", "data-footer-item": k }),
+            " ",
+            label
+          ] }, k)),
+          /* @__PURE__ */ (0, import_jsx_runtime95.jsx)(AlignButtons, { value: f.align, justify: false, onChange: (v) => set({ align: v }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime95.jsxs)("label", { className: "flex items-center gap-1 text-[11px]", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("input", { type: "checkbox", checked: !f.color, onChange: (e) => set({ color: e.target.checked ? "" : ctx.themeColor }), className: "accent-sy-325032" }),
+            " Couleur de l'application"
+          ] }),
+          !!f.color && /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("input", { type: "color", value: f.color, onChange: (e) => set({ color: e.target.value }), "aria-label": "Couleur du bandeau du bas", className: "w-8 h-8 rounded border border-neutral-200 cursor-pointer" }),
+          /* @__PURE__ */ (0, import_jsx_runtime95.jsxs)("label", { className: "flex items-center gap-1 text-[11px]", children: [
+            "Texte ",
+            /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("input", { type: "color", value: f.textColor, onChange: (e) => set({ textColor: e.target.value }), "aria-label": "Couleur du texte du bandeau du bas", className: "w-8 h-8 rounded border border-neutral-200 cursor-pointer" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime95.jsx)(FontSelect, { value: f.font, docLabel: false, onChange: (v) => v && set({ font: v }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime95.jsx)(SizeSelect, { value: f.size, onChange: (v) => set({ size: v }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("span", { className: "text-[10px] text-neutral-500 w-full", children: "Les coordonn\xE9es viennent de Param\xE9trage > \xC9tablissement. Le texte libre se saisit directement dans le bandeau." })
+        ] });
+      }
       if (selected === "banner") {
         const b = doc.banner;
         const set = (p) => onChange({ ...doc, banner: { ...b, ...p } }, false);
@@ -45122,18 +45175,33 @@ Cliquer pour modifier le tarif` : void 0,
         /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("div", { className: "flex flex-wrap items-center gap-1.5 border-t border-neutral-100 pt-2", "data-doc-tools": true, children: tools })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("input", { ref: fileRef, type: "file", accept: "image/*", "data-doc-file": true, className: "hidden", onChange: (e) => onFile(e.target.files) }),
-      /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("div", { className: "overflow-x-auto pb-2", children: /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("div", { className: "mx-auto bg-white shadow-md border border-neutral-200", style: { width: "210mm", maxWidth: "100%", minHeight: "297mm", padding: "14mm 16mm", boxSizing: "border-box", fontFamily: "inherit" }, "data-doc-page": true, children: /* @__PURE__ */ (0, import_jsx_runtime95.jsxs)("div", { style: { fontSize: `${doc.size}pt` }, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("div", { className: "overflow-x-auto pb-2", children: /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("div", { className: "mx-auto bg-white shadow-md border border-neutral-200", style: { width: "210mm", maxWidth: "100%", minHeight: "297mm", padding: "14mm 16mm", boxSizing: "border-box", fontFamily: "inherit" }, "data-doc-page": true, children: /* @__PURE__ */ (0, import_jsx_runtime95.jsxs)("div", { style: { fontSize: `${doc.size}pt`, display: "flex", flexDirection: "column", minHeight: "269mm" }, children: [
         doc.banner.enabled ? /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("div", { onClick: () => setSelected("banner"), style: { outline: selected === "banner" ? "2px solid rgb(var(--sy-325032))" : "1px dashed transparent", outlineOffset: 3, borderRadius: 3, marginBottom: "14pt" }, "data-block": "banner", className: "cursor-pointer", children: /* @__PURE__ */ (0, import_jsx_runtime95.jsx)(BannerView, { banner: doc.banner, ctx, title: /* @__PURE__ */ (0, import_jsx_runtime95.jsx)(Editable, { plain: true, html: doc.banner.title, label: "Titre du bandeau", placeholder: "Titre du document", onFocus: () => setSelected("banner"), onCommit: (v) => onChange({ ...doc, banner: { ...doc.banner, title: v } }, false) }) }) }) : /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("button", { type: "button", onClick: () => onChange({ ...doc, banner: { ...doc.banner, enabled: true } }, true), className: "mb-3 text-[11px] font-semibold text-sy-325032 underline cursor-pointer print:hidden", "data-enable-banner": true, children: "+ Ajouter le bandeau (logo et titre)" }),
-        doc.blocks.map((b, i) => /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("div", { style: { marginBottom: 2 }, children: renderBlock(b, i) }, b.id)),
-        doc.blocks.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("p", { className: "text-xs text-neutral-400 text-center py-10", children: "Document vide : utilisez \xAB Ajouter \xBB ci-dessus." })
+        /* @__PURE__ */ (0, import_jsx_runtime95.jsxs)("div", { style: { flex: 1 }, children: [
+          doc.blocks.map((b, i) => /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("div", { style: { marginBottom: 2 }, children: renderBlock(b, i) }, b.id)),
+          doc.blocks.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("p", { className: "text-xs text-neutral-400 text-center py-10", children: "Document vide : utilisez \xAB Ajouter \xBB ci-dessus." })
+        ] }),
+        doc.footer.enabled ? /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("div", { onClick: () => setSelected("footer"), style: { outline: selected === "footer" ? "2px solid rgb(var(--sy-325032))" : "1px dashed transparent", outlineOffset: 3, borderRadius: 3, marginTop: "14pt" }, "data-block": "footer", className: "cursor-pointer", children: /* @__PURE__ */ (0, import_jsx_runtime95.jsx)(FooterView, { footer: doc.footer, ctx, extra: /* @__PURE__ */ (0, import_jsx_runtime95.jsx)(Editable, { plain: true, html: doc.footer.text, label: "Texte libre du bandeau du bas", placeholder: "Texte libre (facultatif)", onFocus: () => setSelected("footer"), onCommit: (v) => onChange({ ...doc, footer: { ...doc.footer, text: v } }, false) }) }) }) : /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("button", { type: "button", onClick: () => {
+          onChange({ ...doc, footer: { ...doc.footer, enabled: true } }, true);
+          setSelected("footer");
+        }, className: "mt-4 self-start text-[11px] font-semibold text-sy-325032 underline cursor-pointer print:hidden", "data-enable-footer": true, children: "+ Ajouter un bandeau en bas (adresse, t\xE9l\xE9phone\u2026)" })
       ] }) }) }),
-      doc.banner.enabled && /* @__PURE__ */ (0, import_jsx_runtime95.jsx)("div", { className: "flex justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime95.jsxs)("button", { type: "button", onClick: () => {
-        onChange({ ...doc, banner: { ...doc.banner, enabled: false } }, true);
-        setSelected(null);
-      }, className: "text-[11px] text-neutral-500 underline cursor-pointer", "data-disable-banner": true, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime95.jsx)(X, { className: "w-3 h-3 inline" }),
-        " Retirer le bandeau"
-      ] }) })
+      /* @__PURE__ */ (0, import_jsx_runtime95.jsxs)("div", { className: "flex flex-wrap justify-center gap-4", children: [
+        doc.banner.enabled && /* @__PURE__ */ (0, import_jsx_runtime95.jsxs)("button", { type: "button", onClick: () => {
+          onChange({ ...doc, banner: { ...doc.banner, enabled: false } }, true);
+          setSelected(null);
+        }, className: "text-[11px] text-neutral-500 underline cursor-pointer", "data-disable-banner": true, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime95.jsx)(X, { className: "w-3 h-3 inline" }),
+          " Retirer le bandeau du haut"
+        ] }),
+        doc.footer.enabled && /* @__PURE__ */ (0, import_jsx_runtime95.jsxs)("button", { type: "button", onClick: () => {
+          onChange({ ...doc, footer: { ...doc.footer, enabled: false } }, true);
+          setSelected(null);
+        }, className: "text-[11px] text-neutral-500 underline cursor-pointer", "data-disable-footer": true, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime95.jsx)(X, { className: "w-3 h-3 inline" }),
+          " Retirer le bandeau du bas"
+        ] })
+      ] })
     ] });
   };
 
