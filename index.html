@@ -9152,6 +9152,28 @@ var DomaineAppBundle = (() => {
         { key: "corrective", label: "Actions correctives", type: "area", wide: true },
         { key: "closed", label: "Dossier cl\xF4tur\xE9", type: "checkdate" }
       ]
+    },
+    {
+      id: "supplier",
+      tab: "Fournisseurs",
+      singular: "fournisseur",
+      titleLabel: "Fournisseur",
+      titlePlaceholder: "Nom du fournisseur ou du producteur",
+      withDateTime: false,
+      dateLabel: "Fiche cr\xE9\xE9e le",
+      intro: "Coordonn\xE9es et engagements de chaque fournisseur. Les r\xE9ceptions, lots et incidents qui portent son nom sont retrouv\xE9s automatiquement dans sa fiche (m\xEAme nom, accents et majuscules ignor\xE9s).",
+      fields: [
+        { key: "category", label: "Produits fournis", type: "text", placeholder: "Viandes, fruits et l\xE9gumes, boissons\u2026" },
+        { key: "contact", label: "Personne \xE0 contacter", type: "text" },
+        { key: "phone", label: "T\xE9l\xE9phone", type: "text" },
+        { key: "email", label: "E-mail", type: "text" },
+        { key: "address", label: "Adresse", type: "text", wide: true },
+        { key: "approval", label: "N\xB0 d'agr\xE9ment sanitaire ou d'enregistrement", type: "text", hint: "\xC0 demander au fournisseur si besoin ; laissez vide si non communiqu\xE9." },
+        { key: "delivery", label: "Jours et conditions de livraison", type: "text" },
+        { key: "reference", label: "R\xE9f\xE9rence client chez ce fournisseur", type: "text" },
+        { key: "evaluatedOn", label: "Derni\xE8re \xE9valuation du fournisseur", type: "date" },
+        { key: "notes", label: "Commentaires (qualit\xE9, litiges, engagements)", type: "area", wide: true }
+      ]
     }
   ];
   var TYPE_BY_ID = Object.fromEntries(TYPES.map((t) => [t.id, t]));
@@ -9222,6 +9244,12 @@ var DomaineAppBundle = (() => {
         if (n <= 30) return { label: n === 0 ? "\xC0 faire aujourd'hui" : `Dans ${n} j`, tone: "amber", alert: true };
         return { label: `Prochaine le ${frDate(d.nextDue)}`, tone: "green", alert: false };
       }
+      case "supplier": {
+        const missing = [];
+        if (!d.phone && !d.email) missing.push("t\xE9l\xE9phone ou e-mail");
+        if (!d.contact) missing.push("personne \xE0 contacter");
+        return missing.length ? { label: `\xC0 compl\xE9ter : ${missing.join(", ")}`, tone: "amber", alert: false } : { label: "Renseign\xE9", tone: "green", alert: false };
+      }
       case "recall": {
         if (d.closed) return { label: `Cl\xF4tur\xE9 le ${frDate(d.closed)}`, tone: "green", alert: false };
         const n = doneSteps(e);
@@ -9259,9 +9287,27 @@ var DomaineAppBundle = (() => {
         return [sel2("productType"), d.storage].filter(Boolean).join(" \xB7 ");
       case "duty":
         return [d.everyDays && `tous les ${d.everyDays} j`, d.provider].filter(Boolean).join(" \xB7 ");
+      case "supplier":
+        return [d.category, d.contact, d.phone].filter(Boolean).join(" \xB7 ");
       case "recall":
         return [sel2("source"), `${(d.lots || "").split(",").filter((id) => m[id]).length} lot(s) reli\xE9(s)`].filter(Boolean).join(" \xB7 ");
     }
+  }
+  var sameName = (a, b) => {
+    const n = (s) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+    return !!n(a) && n(a) === n(b);
+  };
+  function supplierActivity(m, name) {
+    const all = Object.values(m).filter((r) => !r.archived);
+    const receipts = all.filter((r) => r.kind === "receipt" && sameName(r.supplier, name));
+    const ids = new Set(receipts.map((r) => r.id));
+    return {
+      receipts: receipts.length,
+      nonconform: receipts.filter((r) => r.result === "nonconform").length,
+      lastReceipt: receipts.map((r) => r.date).sort().pop() || "",
+      lots: all.filter((r) => r.kind === "lot" && sameName(r.supplier, name)).length,
+      openIncidents: all.filter((r) => r.kind === "incident" && ids.has(r.sourceId) && r.status !== "closed").length
+    };
   }
   function entryDetail(e, m) {
     const def = TYPE_BY_ID[e.type];
@@ -9279,6 +9325,10 @@ var DomaineAppBundle = (() => {
       rows.push([f.label, shown]);
     });
     if (e.type === "oil") rows.splice(1, 0, ["R\xE9sultat", RESULT_LABEL[e.result]]);
+    if (e.type === "supplier") {
+      const a = supplierActivity(m, e.title);
+      rows.push(["R\xE9ceptions enregistr\xE9es", a.receipts ? ` (derni\xE8re le ${frDate(a.lastReceipt)}), dont ${a.nonconform} non conforme(s)` : "Aucune"], ["Lots en tra\xE7abilit\xE9", String(a.lots)], ["Incidents de r\xE9ception ouverts", String(a.openIncidents)]);
+    }
     rows.push(["Saisi par", e.by || NR]);
     return rows;
   }
@@ -43874,6 +43924,24 @@ Cliquer pour modifier le tarif` : void 0,
         /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Field, { label: "R\xE9sultat", children: /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(ResultPicker, { value: e.result, onChange: (r) => set({ result: r }), disabledConform: polar !== "within" }) })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime87.jsx)("div", { className: "grid sm:grid-cols-2 gap-3", children: def.fields.map(renderField) }),
+      e.type === "supplier" && !isNew && (() => {
+        const a = supplierActivity(records3, e.title);
+        return /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)("div", { className: "p-2.5 rounded-xl bg-neutral-50 border border-neutral-200 text-[11px] text-neutral-700 space-y-0.5", "data-supplier-activity": true, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime87.jsx)("div", { className: "font-bold text-neutral-800", children: "Activit\xE9 avec ce fournisseur (d'apr\xE8s les registres)" }),
+          /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)("div", { children: [
+            "R\xE9ceptions : ",
+            a.receipts ? `${a.receipts}, derni\xE8re le ${frDate(a.lastReceipt)}, dont ${a.nonconform} non conforme(s)` : "aucune"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)("div", { children: [
+            "Lots en tra\xE7abilit\xE9 : ",
+            a.lots
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)("div", { children: [
+            "Incidents de r\xE9ception ouverts : ",
+            a.openIncidents
+          ] })
+        ] });
+      })(),
       e.type === "recall" && /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)("p", { className: "text-[11px] text-neutral-500", "data-recall-progress": true, children: [
         REG_STEPS.filter(([k]) => e.data[k]).length,
         " \xE9tape(s) sur ",
@@ -45412,7 +45480,7 @@ Cliquer pour modifier le tarif` : void 0,
         set({ photos: photos2 });
         onToast(text + " : pensez \xE0 enregistrer la r\xE9ception.");
       }, onToast }),
-      /* @__PURE__ */ (0, import_jsx_runtime94.jsx)(Suggest, { id: "hy-suppliers", values: receiptList(records3).map((x) => x.supplier) }),
+      /* @__PURE__ */ (0, import_jsx_runtime94.jsx)(Suggest, { id: "hy-suppliers", values: [...entryList(records3, "supplier").filter((s) => !s.archived).map((s) => s.title), ...receiptList(records3).map((x) => x.supplier)] }),
       /* @__PURE__ */ (0, import_jsx_runtime94.jsx)(Suggest, { id: "hy-rproducts", values: receiptList(records3).map((x) => x.products) }),
       !isNew && lots.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime94.jsxs)("p", { className: "text-[11px] text-neutral-600", children: [
         "Fiche de tra\xE7abilit\xE9 li\xE9e : ",
