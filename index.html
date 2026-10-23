@@ -2789,8 +2789,17 @@ var DomaineAppBundle = (() => {
     {
       id: "statistics",
       name: "Statistiques",
-      description: "Analyse mensuelle, analyse annuelle et tableau de synth\xE8se.",
-      tabs: ["report", "annual", "synthesis"],
+      description: "Analyse mensuelle et analyse annuelle.",
+      tabs: ["report", "annual"],
+      dependsOn: ["reservations"],
+      available: true,
+      defaultEnabled: true
+    },
+    {
+      id: "synthesis",
+      name: "Tableau de synth\xE8se",
+      description: "Vue comptable compl\xE8te : finances et marges nettes de toutes les r\xE9servations.",
+      tabs: ["synthesis"],
       dependsOn: ["reservations"],
       available: true,
       defaultEnabled: true
@@ -3525,7 +3534,7 @@ var DomaineAppBundle = (() => {
   function licenseAllows(id) {
     if (!LICENSE_REQUIRED) return true;
     if (FREE_MODULES.includes(id)) return true;
-    return state.status === "valid" && state.included.includes(id);
+    return state.status === "valid" && (state.included.includes(id) || id === "synthesis" && state.included.includes("statistics"));
   }
   try {
     window.addEventListener(CONNECTOR_CHANGED_EVENT, () => {
@@ -15853,7 +15862,6 @@ function icalExportOutput_(e) {
       shortLabel: "Synth\xE8se",
       description: "Vue comptable compl\xE8te, finances & marges nettes",
       icon: TableProperties,
-      badge: "Complet",
       color: "text-amber-700"
     },
     {
@@ -24959,6 +24967,7 @@ ${establishmentName}`;
     const hiddenForGuests = book.sections.filter((s) => s.enabled && audience === "public" && s.privacy === "guests").length;
     const cover = book.coverPhoto ? photos2[book.coverPhoto] : void 0;
     const name = catalog.establishment.name;
+    const [menuOpen, setMenuOpen] = (0, import_react45.useState)(false);
     const goTo = (id) => {
       try {
         document.getElementById(`livret-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -24975,16 +24984,41 @@ ${establishmentName}`;
           (book.subtitle || catalog.establishment.subtitle) && /* @__PURE__ */ (0, import_jsx_runtime35.jsx)("p", { className: "text-[12px] text-neutral-500 mt-0.5", children: book.subtitle || catalog.establishment.subtitle })
         ] }) })
       ] }),
-      sections.length + extraNav.length > 1 && /* @__PURE__ */ (0, import_jsx_runtime35.jsx)("div", { className: "px-4 mt-3", children: /* @__PURE__ */ (0, import_jsx_runtime35.jsx)("div", { className: "flex flex-wrap gap-1.5", children: [...sections.map((s) => ({ id: s.id, label: s.title || SECTION_META[s.kind].label })), ...extraNav].map((n) => /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(
-        "button",
-        {
-          type: "button",
-          onClick: () => goTo(n.id),
-          className: "px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap bg-white border border-neutral-200 text-neutral-700 cursor-pointer",
-          children: n.label
-        },
-        n.id
-      )) }) }),
+      sections.length + extraNav.length > 1 && /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)("div", { className: "px-4 mt-3 sticky top-0 z-20", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(
+          "button",
+          {
+            type: "button",
+            onClick: () => setMenuOpen((o) => !o),
+            "aria-expanded": menuOpen,
+            className: "w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white border border-neutral-200 shadow-sm text-[13px] font-semibold text-neutral-800 cursor-pointer",
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(List, { className: "w-4 h-4 shrink-0", style: { color } }),
+              /* @__PURE__ */ (0, import_jsx_runtime35.jsx)("span", { className: "flex-1 text-left", children: "Aller \xE0 une rubrique" }),
+              /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(ChevronDown, { className: `w-4 h-4 text-neutral-400 transition-transform ${menuOpen ? "rotate-180" : ""}` })
+            ]
+          }
+        ),
+        menuOpen && /* @__PURE__ */ (0, import_jsx_runtime35.jsx)("div", { className: "mt-1.5 bg-white rounded-xl border border-neutral-200 shadow-lg overflow-y-auto max-h-[60vh] py-1", children: [
+          ...sections.map((s) => ({ id: s.id, label: s.title || SECTION_META[s.kind].label, Icon: SECTION_META[s.kind].icon })),
+          ...extraNav.map((n) => ({ ...n, Icon: ChevronRight }))
+        ].map((n) => /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(
+          "button",
+          {
+            type: "button",
+            onClick: () => {
+              setMenuOpen(false);
+              goTo(n.id);
+            },
+            className: "w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] text-neutral-800 hover:bg-neutral-50 cursor-pointer",
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(n.Icon, { className: "w-4 h-4 shrink-0", style: { color } }),
+              /* @__PURE__ */ (0, import_jsx_runtime35.jsx)("span", { className: "min-w-0 break-words", children: n.label })
+            ]
+          },
+          n.id
+        )) })
+      ] }),
       /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)("div", { className: "px-4 py-3 space-y-3", children: [
         header,
         sections.length === 0 && !children && /* @__PURE__ */ (0, import_jsx_runtime35.jsx)("div", { className: "p-6 text-center text-[12px] text-neutral-500 bg-white rounded-2xl border border-dashed border-neutral-300", children: "Aucune rubrique \xE0 afficher pour le moment." }),
