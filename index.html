@@ -2744,24 +2744,14 @@ var DomaineAppBundle = (() => {
     },
     {
       id: "planning",
-      name: "Planning",
-      description: "Planning interactif avec les barres de s\xE9jours par h\xE9bergement.",
+      name: "Calendrier",
+      description: "Planning interactif (barres de s\xE9jours par h\xE9bergement) ou calendrier mensuel jour par jour : un bouton change l'affichage et le dernier choix est m\xE9moris\xE9.",
       tabs: ["timeline"],
       dependsOn: ["reservations"],
       available: true,
       defaultEnabled: true,
       settingsSection: "accommodations",
       configStatus: (s) => s.accommodations.some((a) => a.active && a.showInPlanning) ? { state: "ok" } : { state: "todo", message: "Aucun h\xE9bergement actif affich\xE9 dans le planning." }
-    },
-    {
-      id: "calendar",
-      name: "Calendrier",
-      description: "Vue mensuelle jour par jour des r\xE9servations.",
-      tabs: ["calendar"],
-      dependsOn: ["reservations"],
-      hostedBy: "planning",
-      available: true,
-      defaultEnabled: true
     },
     {
       id: "pricing",
@@ -3417,7 +3407,7 @@ var DomaineAppBundle = (() => {
   // src/core/license/license.ts
   var LICENSE_REQUIRED = false;
   var LICENSE_PUBLIC_KEY = { "kty": "EC", "crv": "P-256", "x": "esU1uYoaf_SfQome-dlrGJOgiYN-PNzfmsRP0QMG8wM", "y": "ire1t3YwRZRZPYJ2wHlrsO-DUlwLdWceMp3kSEvaaeA", "ext": true, "key_ops": ["verify"] };
-  var FREE_MODULES = ["reservations", "planning", "calendar", "today"];
+  var FREE_MODULES = ["reservations", "planning", "today"];
   var LICENSE_PREFIX = "SYLV1";
   var CONNECTOR_CHANGED_EVENT = "sylvaria-connector-changed";
   var APPS_SCRIPT_KEY = "domaine_sylvaria_apps_script_url";
@@ -15809,19 +15799,11 @@ function icalExportOutput_(e) {
     },
     {
       id: "timeline",
-      label: "Planning interactif",
-      shortLabel: "Planning",
-      description: "Barres de s\xE9jours continues ou calendrier mensuel (bouton pour changer d'affichage)",
-      icon: Calendar,
-      color: "text-sy-325032"
-    },
-    {
-      id: "calendar",
       label: "Calendrier",
       shortLabel: "Calendrier",
-      description: "Vue mensuelle par jour des r\xE9servations",
-      icon: CalendarDays,
-      color: "text-neutral-700"
+      description: "Barres de s\xE9jours continues ou vue mensuelle jour par jour (bouton pour changer d'affichage)",
+      icon: Calendar,
+      color: "text-sy-325032"
     },
     {
       id: "list",
@@ -31472,7 +31454,7 @@ Cordialement`
   var import_jsx_runtime55 = __require("react/jsx-runtime");
   var OPTIONS = [
     { id: "timeline", label: "Planning", icon: ChartNoAxesGantt },
-    { id: "calendar", label: "Calendrier", icon: CalendarDays }
+    { id: "calendar", label: "Mois", icon: CalendarDays }
   ];
   var PlanningViewSwitch = ({ view, onChange }) => /* @__PURE__ */ (0, import_jsx_runtime55.jsx)("div", { className: "flex items-center justify-between gap-2", "data-planning-switch": true, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)("div", { role: "group", "aria-label": "Type d'affichage", className: "inline-flex p-0.5 rounded-xl bg-neutral-100 border border-neutral-200", children: OPTIONS.map((o) => {
     const Icon2 = o.icon;
@@ -32431,7 +32413,7 @@ Cliquer pour modifier le tarif`,
     return /* @__PURE__ */ (0, import_jsx_runtime59.jsxs)("div", { className: "bg-white rounded-2xl border border-neutral-200/90 shadow-xs overflow-hidden flex flex-col", children: [
       /* @__PURE__ */ (0, import_jsx_runtime59.jsxs)("div", { className: "px-4 sm:px-5 py-3 border-b border-neutral-200/80 flex items-center justify-between gap-3 bg-neutral-50/50", children: [
         /* @__PURE__ */ (0, import_jsx_runtime59.jsxs)("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime59.jsx)("h3", { className: "font-serif font-bold text-neutral-900 text-base sm:text-lg", children: "Planning interactif des chambres" }),
+          /* @__PURE__ */ (0, import_jsx_runtime59.jsx)("h3", { className: "font-serif font-bold text-neutral-900 text-base sm:text-lg", children: "Calendrier des chambres" }),
           /* @__PURE__ */ (0, import_jsx_runtime59.jsx)("span", { className: "text-xs text-neutral-400 font-sans hidden sm:inline", children: "\xB7 Vue continue du mois" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime59.jsx)("span", { className: "italic text-neutral-400 text-xs hidden md:inline", children: "Cliquez sur une case pour ajouter ou sur une barre pour voir les d\xE9tails" })
@@ -55768,7 +55750,6 @@ ${establishment}`;
   function openHostedView(tab, host) {
     if (host === "meals") requestMealsView("ingredients");
     else if (host === "profitability") requestProfitabilityView(tab === "annual" ? "annual" : "monthly");
-    else if (host === "planning") setPlanningView("calendar");
   }
   applyThemeColor(getSettings().establishment.themeColor);
   onSettingsChanged(() => applyThemeColor(getSettings().establishment.themeColor));
@@ -55864,7 +55845,8 @@ ${establishment}`;
     const [selectedMonth, setSelectedMonth] = (0, import_react127.useState)(now.getMonth());
     const firstVisibleTab = () => {
       if (hygieneTarget && isTabEnabled("hygiene")) return "hygiene";
-      const preferred = getSettings().preferences.defaultTab;
+      const stored = getSettings().preferences.defaultTab;
+      const preferred = stored === "calendar" ? "timeline" : stored;
       if (TABS.some((t) => t.id === preferred) && isTabEnabled(preferred)) return preferred;
       const host = hostTabFor(preferred);
       if (host && isTabEnabled(host)) {
@@ -55897,8 +55879,7 @@ ${establishment}`;
     }, [settings, activeTab]);
     const statisticsEnabled = isModuleEnabled("statistics", settings);
     const storedPlanningView = usePlanningView();
-    const calendarInPlanning = isModuleEnabled("calendar", settings) && isModuleEnabled("planning", settings);
-    const planningView = calendarInPlanning ? storedPlanningView : "timeline";
+    const planningView = storedPlanningView;
     const [isModalOpen, setIsModalOpen] = (0, import_react127.useState)(false);
     const [editingReservation, setEditingReservation] = (0, import_react127.useState)(null);
     const [viewingReservation, setViewingReservation] = (0, import_react127.useState)(null);
@@ -56465,7 +56446,7 @@ Que faire : r\xE9duisez ou supprimez des photos (livret, tickets de d\xE9penses)
         `header-${dataVersion}`
       ),
       /* @__PURE__ */ (0, import_jsx_runtime125.jsxs)("main", { className: "flex-1 max-w-7xl w-full mx-auto px-2.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6", children: [
-        activeTab === "timeline" && calendarInPlanning && /* @__PURE__ */ (0, import_jsx_runtime125.jsx)(PlanningViewSwitch, { view: planningView, onChange: setPlanningView }),
+        activeTab === "timeline" && /* @__PURE__ */ (0, import_jsx_runtime125.jsx)(PlanningViewSwitch, { view: planningView, onChange: setPlanningView }),
         activeTab === "timeline" && planningView === "timeline" && /* @__PURE__ */ (0, import_jsx_runtime125.jsx)("section", { "aria-label": "R\xE9capitulatif mensuel", children: /* @__PURE__ */ (0, import_jsx_runtime125.jsx)(
           MonthlyStatsBanner,
           {
@@ -56484,7 +56465,7 @@ Que faire : r\xE9duisez ou supprimez des photos (livret, tickets de d\xE9penses)
               onNewReservationAtDate: handleOpenNewReservation
             }
           ),
-          (activeTab === "calendar" || activeTab === "timeline" && planningView === "calendar") && /* @__PURE__ */ (0, import_jsx_runtime125.jsxs)("div", { className: "space-y-4 sm:space-y-6", children: [
+          activeTab === "timeline" && planningView === "calendar" && /* @__PURE__ */ (0, import_jsx_runtime125.jsxs)("div", { className: "space-y-4 sm:space-y-6", children: [
             /* @__PURE__ */ (0, import_jsx_runtime125.jsx)(
               MonthCalendarGrid,
               {
