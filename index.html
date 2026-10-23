@@ -1077,6 +1077,17 @@ var DomaineAppBundle = (() => {
     }
     return null;
   }
+  var EXTRA_ING = "ing:";
+  var EXTRA_FREE = "cost:";
+  var isExtraLine = (itemId) => itemId.startsWith(EXTRA_ING) || itemId.startsWith(EXTRA_FREE);
+  function extraUnitCost(itemId, ingredients) {
+    if (itemId.startsWith(EXTRA_FREE)) {
+      const n = parseFloat(itemId.slice(EXTRA_FREE.length));
+      return isFinite(n) && n >= 0 ? n : null;
+    }
+    const ing = ingredients.find((x) => x.id === itemId.slice(EXTRA_ING.length));
+    return ing && ing.portionCost > 0 ? ing.portionCost : null;
+  }
   var countsForStay = (o) => o.status !== "refused" && o.status !== "cancelled";
   var round2 = (n) => Math.round(n * 100) / 100;
   function ordersAmounts(orders, content, dishes, ingredients) {
@@ -1086,7 +1097,7 @@ var DomaineAppBundle = (() => {
       out.amount += o.total;
       o.lines.forEach((l) => {
         const item2 = content.items.find((i) => i.id === l.itemId);
-        const unit = item2 ? itemUnitCost(item2, dishes, ingredients) : null;
+        const unit = isExtraLine(l.itemId) ? extraUnitCost(l.itemId, ingredients) : item2 ? itemUnitCost(item2, dishes, ingredients) : null;
         if (unit === null) {
           if (!out.unknownCosts.includes(l.name)) out.unknownCosts.push(l.name);
           return;
@@ -1108,7 +1119,7 @@ var DomaineAppBundle = (() => {
     orders.forEach((o) => {
       adults += o.adults;
       children += o.children;
-      o.lines.forEach((l) => {
+      o.lines.filter((l) => !isExtraLine(l.itemId)).forEach((l) => {
         const it = items.find((x) => x.name === l.name);
         if (it) {
           it.qty += l.qty;
@@ -24159,6 +24170,10 @@ Les ingr\xE9dients d\xE9j\xE0 pr\xE9sents gardent leur nom, leur unit\xE9 et leu
     const [status, setStatus] = (0, import_react43.useState)("done");
     const [qty, setQty] = (0, import_react43.useState)({});
     const [childQty, setChildQty] = (0, import_react43.useState)({});
+    const ingredients = (0, import_react43.useMemo)(() => getLinkedIngredients().filter((i) => i.portionCost > 0), []);
+    const [extras, setExtras] = (0, import_react43.useState)([]);
+    const addExtra = () => setExtras((list3) => [...list3, { key: String(Date.now() + list3.length), ing: ingredients[0]?.id || "", label: "", unitCost: "", qty: "" }]);
+    const setExtra = (key, patch) => setExtras((list3) => list3.map((x) => x.key === key ? { ...x, ...patch } : x));
     const [busy, setBusy] = (0, import_react43.useState)(false);
     const [error, setError] = (0, import_react43.useState)("");
     const moment2 = moments.find((m) => m.id === momentId);
@@ -24183,6 +24198,17 @@ Les ingr\xE9dients d\xE9j\xE0 pr\xE9sents gardent leur nom, leur unit\xE9 et leu
       if (a + c < 1) return setError("Indiquez le nombre de personnes.");
       if (!reservationId && !name.trim()) return setError("Indiquez un nom ou choisissez un s\xE9jour.");
       const lines2 = items.map((i) => ({ itemId: i.id, name: i.name, qty: toNum(qty[i.id] || ""), childQty: toNum(childQty[i.id] || ""), price: i.price, unitPrice: i.unitPrice, childUnitPrice: i.childUnitPrice })).filter((l) => l.qty + l.childQty > 0);
+      for (const x of extras) {
+        const q = toNum(x.qty);
+        if (q <= 0) continue;
+        if (x.ing === "") {
+          if (!x.label.trim()) return setError("Donnez un nom \xE0 chaque consommation libre.");
+          lines2.push({ itemId: EXTRA_FREE + toNum(x.unitCost), name: x.label.trim(), qty: q, childQty: 0, price: "", unitPrice: 0, childUnitPrice: 0 });
+        } else {
+          const ing = ingredients.find((i) => i.id === x.ing);
+          if (ing) lines2.push({ itemId: EXTRA_ING + ing.id, name: ing.name, qty: q, childQty: 0, price: "", unitPrice: 0, childUnitPrice: 0 });
+        }
+      }
       setBusy(true);
       try {
         await createAdminMealOrder({ momentId: moment2.id, momentName: moment2.name, date, time, adults: a, children: c, lines: lines2, name: name.trim(), message: message.trim(), reservationId, status });
@@ -24263,6 +24289,32 @@ Les ingr\xE9dients d\xE9j\xE0 pr\xE9sents gardent leur nom, leur unit\xE9 et leu
           ] }, i.id)) }),
           /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("p", { className: "text-[10px] text-neutral-400 mt-1", children: "Quantit\xE9s : la 1re case pour les adultes, la 2e (si elle existe) pour les portions enfant." })
         ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("span", { className: "block text-[11px] font-semibold text-neutral-700 mb-1", children: "Autres consommations (libre-service, non command\xE9es par le voyageur)" }),
+          extras.map((x) => /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)("div", { className: "flex flex-wrap items-center gap-1.5 mb-1.5", "data-extra-row": true, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)("select", { value: x.ing, onChange: (e) => setExtra(x.key, { ing: e.target.value }), className: `${field} flex-1 min-w-[9rem]`, "aria-label": "Consommation", children: [
+              ingredients.map((i) => /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)("option", { value: i.id, children: [
+                i.name,
+                " (",
+                String(i.portionCost).replace(".", ","),
+                " \u20AC)"
+              ] }, i.id)),
+              /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("option", { value: "", children: "Autre (co\xFBt \xE0 saisir)\u2026" })
+            ] }),
+            x.ing === "" && /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)(import_jsx_runtime31.Fragment, { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("input", { value: x.label, onChange: (e) => setExtra(x.key, { label: e.target.value }), placeholder: "Nom", "aria-label": "Nom de la consommation", className: `${field} w-28` }),
+              /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("div", { className: "w-16", children: /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Num, { value: x.unitCost, onChange: (v) => setExtra(x.key, { unitCost: v }), label: "Co\xFBt unitaire en euros" }) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("div", { className: "w-14", children: /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Num, { value: x.qty, onChange: (v) => setExtra(x.key, { qty: v }), label: "Quantit\xE9 consomm\xE9e" }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("button", { type: "button", onClick: () => setExtras((l) => l.filter((y) => y.key !== x.key)), "aria-label": "Retirer", className: "p-1.5 text-neutral-400 hover:text-red-700 cursor-pointer", children: /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Trash2, { className: "w-3.5 h-3.5" }) })
+          ] }, x.key)),
+          /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)("button", { type: "button", onClick: addExtra, className: "flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-sy-325032 border border-neutral-200 rounded-lg cursor-pointer", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Plus, { className: "w-3.5 h-3.5" }),
+            " Ajouter une consommation (caf\xE9, lait\u2026)"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime31.jsx)("p", { className: "text-[10px] text-neutral-400 mt-1", children: "Compt\xE9es dans le co\xFBt seulement (jamais vendues). Le co\xFBt d'une portion vient de la grille des ingr\xE9dients." })
+        ] }),
+        "          ",
         /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)("div", { className: "grid sm:grid-cols-3 gap-2.5", children: [
           /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)("label", { className: "block text-[11px] font-semibold text-neutral-700", children: [
             "Heure (facultatif)",
