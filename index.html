@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Domaine Sylvaria - Gestion Rapprochement & Tarification</title>
+  <title>Gestyria v163</title>
+  <meta name="application-name" content="Gestyria v163" />
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16416,6 +16417,12 @@ function icalExportOutput_(e) {
     ] });
   };
 
+  // src/core/app.ts
+  var APP_NAME = "Gestyria";
+  var APP_VERSION = "163";
+  var APP_VERSION_LABEL = `v${APP_VERSION}`;
+  var APP_FULL_NAME = `${APP_NAME} ${APP_VERSION_LABEL}`;
+
   // src/components/Header.tsx
   var import_jsx_runtime4 = __require("react/jsx-runtime");
   var TABS = [
@@ -16628,6 +16635,9 @@ function icalExportOutput_(e) {
     const years = [2025, 2026, 2027];
     const settings = useSettings();
     const establishmentName = settings.establishment.name;
+    (0, import_react17.useEffect)(() => {
+      document.title = establishmentName ? `${APP_NAME} \xB7 ${establishmentName}` : APP_NAME;
+    }, [establishmentName]);
     const moduleRank = orderedModules(settings, TABS.map((x) => x.id)).map((m) => m.id);
     const visibleTabs = TABS.filter((t) => isTabEnabled(t.id, settings)).sort(
       (a, b) => moduleRank.indexOf(getModuleForTab(a.id)?.id) - moduleRank.indexOf(getModuleForTab(b.id)?.id)
@@ -16688,7 +16698,13 @@ function icalExportOutput_(e) {
               className: "cursor-pointer select-none group",
               children: [
                 /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "text-sm sm:text-xl font-bold tracking-tight text-neutral-900 font-serif flex items-center gap-1.5 leading-none transition-colors group-hover:text-sy-325032", children: establishmentName }),
-                appVersion === "official" ? /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-[10px] sm:text-xs text-neutral-500 font-sans mt-0.5 tracking-wide", children: "officiel" }) : /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-[9px] sm:text-xs text-neutral-500 font-sans mt-0.5 hidden xs:block", children: settings.establishment.subtitle })
+                appVersion === "official" ? /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-[10px] sm:text-xs text-neutral-500 font-sans mt-0.5 tracking-wide", children: "officiel" }) : /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("p", { className: "text-[9px] sm:text-xs text-neutral-500 font-sans mt-0.5 hidden xs:block", children: [
+                  settings.establishment.subtitle,
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("span", { className: "hidden sm:inline text-neutral-400", title: "Nom et version du logiciel", children: [
+                    " \xB7 ",
+                    APP_FULL_NAME
+                  ] })
+                ] })
               ]
             }
           )
@@ -20758,7 +20774,7 @@ Ajoutez-le \xE0 l'\xE9cran d'accueil de votre t\xE9l\xE9phone. Ne le transmettez
           return;
         }
         const today5 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-        downloadText(html, `domaine-sylvaria-${today5}.html`);
+        downloadText(html, `gestyria-${APP_VERSION_LABEL}-${today5}.html`);
         onToast("Fichier de l'application t\xE9l\xE9charg\xE9.");
       } finally {
         setBusy(false);
@@ -20775,7 +20791,10 @@ Ajoutez-le \xE0 l'\xE9cran d'accueil de votre t\xE9l\xE9phone. Ne le transmettez
       /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(InfoNote, { children: "Le fichier s'ouvre d'un double-clic dans Chrome, Edge ou Safari, sans installation ni connexion \xE0 un serveur. Il contient l'application, pas vos donn\xE9es : celles-ci restent dans le navigateur de chaque appareil et se partagent par la synchronisation Google Sheets." }),
       /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: "p-3.5 rounded-xl border border-neutral-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3", children: [
         /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: "min-w-0", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: "font-serif font-bold text-sm text-neutral-900", children: "Application autonome (.html)" }),
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: "font-serif font-bold text-sm text-neutral-900", children: [
+            "Application autonome (.html) \xB7 ",
+            APP_FULL_NAME
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("p", { className: "text-[11px] text-neutral-500 mt-0.5", children: "Version actuellement ouverte, avec tous les onglets, fen\xEAtres et le Param\xE9trage." })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(PrimaryButton, { onClick: handleDownload, disabled: busy, children: [
@@ -20833,9 +20852,9 @@ Ajoutez-le \xE0 l'\xE9cran d'accueil de votre t\xE9l\xE9phone. Ne le transmettez
     return out;
   }
   function buildBackup(entries = collectEntries(), now = /* @__PURE__ */ new Date()) {
-    return { format: BACKUP_FORMAT, version: 1, createdAt: now.toISOString(), app: "Domaine Sylvaria \u2014 Gestion", entries };
+    return { format: BACKUP_FORMAT, version: 1, createdAt: now.toISOString(), app: APP_FULL_NAME, entries };
   }
-  var backupFileName = (now = /* @__PURE__ */ new Date()) => `sauvegarde-sylvaria-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}h${String(now.getMinutes()).padStart(2, "0")}.json`;
+  var backupFileName = (now = /* @__PURE__ */ new Date()) => `sauvegarde-gestyria-v${APP_VERSION}-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}h${String(now.getMinutes()).padStart(2, "0")}.json`;
   function downloadBackup() {
     const file = buildBackup();
     const text = JSON.stringify(file);
