@@ -1,0 +1,11 @@
+Site de Domaine Sylvaria — généré par l'application Gestyria
+
+Contenu du dossier : une page HTML par rubrique, style.css, site.js, le dossier assets (photos) et, avec un nom de domaine, sitemap.xml, robots.txt et CNAME.
+
+Pour mettre le site en ligne :
+1. Chez votre hébergeur (OVH, o2switch, IONOS…), envoyez tout le contenu de ce dossier à la racine de votre espace web (FTP ou gestionnaire de fichiers).
+   Ou bien utilisez un hébergement gratuit de pages statiques (GitHub Pages, Netlify, Cloudflare Pages) : déposez le dossier tel quel.
+2. Chez votre registrar, faites pointer le nom de domaine www.domainesylvaria.fr vers l'hébergement (enregistrements DNS indiqués par l'hébergeur).
+3. Après chaque modification dans l'application, générez de nouveau le site et remplacez les fichiers.
+
+Les formulaires envoient leurs messages à votre e-mail (ou au livret d'accueil publié si le connecteur Google est configuré).
